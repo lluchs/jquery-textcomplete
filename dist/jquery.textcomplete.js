@@ -462,8 +462,12 @@ if (typeof jQuery === 'undefined') {
       // This can't be done during init, as textcomplete may be used on multiple elements on the same page
       // Because the same dropdown is reused behind the scenes, we need to recheck every time the dropdown is showed
       var position = 'absolute';
-      // Check if input or one of its parents has positioning we need to care about
-      this.$inputEl.add(this.$inputEl.parents()).each(function() {
+      // Check if input or one of its parents that are not shared with the
+      // dropdown has positioning we need to care about.
+      this.$inputEl
+        .add(this.$inputEl.parents())
+        .not(this.$el.parents())
+        .each(function() {
         if($(this).css('position') === 'absolute') // The element has absolute positioning, so it's all OK
           return false;
         if($(this).css('position') === 'fixed') {
@@ -931,14 +935,19 @@ if (typeof jQuery === 'undefined') {
       throw new Error('Not implemented');
     },
 
-    // Returns the caret's relative coordinates from body's left top corner.
-    //
-    // FIXME: Calculate the left top corner of `this.option.appendTo` element.
+    // Returns the caret's relative coordinates from the top left corner of the
+    // closest common ancestor element.
     getCaretPosition: function () {
       var position = this._getCaretRelativePosition();
+      var commonAncestor = this.$el.parents()
+        .filter(this.option.appendTo.parents().addBack())
+        .first()
+        .children()
+        .offsetParent();
       var offset = this.$el.offset();
-      position.top += offset.top;
-      position.left += offset.left;
+      var commonOffset = commonAncestor.offset();
+      position.top += offset.top - commonOffset.top;
+      position.left += offset.left - commonOffset.left;
       return position;
     },
 
